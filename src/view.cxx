@@ -23,8 +23,6 @@ View::View(Model const& model)
         , player_grey_token_(7, dark_grey_color)
         , position_sprite_(8, red_color)
         , background_black_sprite(this->initial_window_dimensions(), black_color)
-        , background_white_sprite(this->initial_window_dimensions(),
-                white_color)
         , background_grey_sprite(this->initial_window_dimensions(),
                 light_grey_color)
         // You may want to add sprite initialization here
@@ -36,12 +34,86 @@ void View::draw(Sprite_set& set)
 {
     Position centre = model_.board().center();
 
+    ge211::Text_sprite::Builder black_turn_builder(sans30);
+    black_turn_builder.color(white_color) << "BLACK TURN";
+    black_turn_sprite.reconfigure(black_turn_builder);
+
+    ge211::Text_sprite::Builder white_turn_builder(sans30);
+    white_turn_builder.color(white_color) << "WHITE TURN";
+    white_turn_sprite.reconfigure(white_turn_builder);
+
+    ge211::Text_sprite::Builder black_winner_builder(sans30);
+    black_winner_builder.color(white_color) << "BLACK WINS";
+    black_wins_sprite.reconfigure(black_winner_builder);
+
+    ge211::Text_sprite::Builder white_winner_builder(sans30);
+    white_winner_builder.color(white_color) << "WHITE WINS";
+    white_wins_sprite.reconfigure(white_winner_builder);
+
+    ge211::Text_sprite::Builder neither_winner_builder(sans30);
+    neither_winner_builder.color(white_color) << "DRAW";
+    neither_wins_sprite.reconfigure(neither_winner_builder);
+
     for(int i = 0; i < model_.board().dimensions().width; i++) {
         for (int j = 0; j < model_.board().dimensions().height; j++) {
+
+            set.add_sprite(background_black_sprite, {0,0}, 0);
             Position on_board = {i, j};
             ge211::Position screen_pos = board_to_screen_(on_board);
             set.add_sprite(board_sprite_, screen_pos, 1);
             const Move* move = model_.find_move(on_board);
+
+            if(model_.is_game_over()) {
+                ge211::Rectangle board = model_.board();
+                set.add_sprite(background_grey_sprite, {0,0}, 0);
+                if(model_.winner() == Player::light) {
+                    set.add_sprite(white_wins_sprite, {
+                            (initial_window_dimensions()
+                                     .width / 2 - 50), 0}, 4);
+                    for (Position each_pos: board) {
+                        ge211::Position final_screen_pos =
+                                                board_to_screen_(each_pos);
+                        if(model_.operator[](each_pos) == Player::dark){
+                            set.add_sprite(player_grey_token_,
+                                           final_screen_pos, 3);
+
+                        }
+                    }
+                }
+                else if(model_.winner() == Player::dark) {
+                    set.add_sprite(black_wins_sprite, {
+                            (initial_window_dimensions()
+                                     .width / 2 - 50), 0}, 4);
+                    for (Position each_pos: board) {
+                        ge211::Position final_screen_pos =
+                                                board_to_screen_(each_pos);
+                        if(model_.operator[](each_pos) == Player::light){
+                            set.add_sprite(player_grey_token_,
+                                           final_screen_pos, 3);
+
+                        }
+                    }
+                } else if (model_.winner() == Player::neither){
+                    set.add_sprite(neither_wins_sprite, {
+                            (initial_window_dimensions()
+                                     .width / 2 - 50), 0}, 4);
+                    for (Position each_pos: board) {
+                        ge211::Position final_screen_pos =
+                                                board_to_screen_(each_pos);
+                        set.add_sprite(player_grey_token_,
+                                       final_screen_pos, 3);
+
+                    }
+                }
+            }
+            else if(model_.turn() == Player::dark) {
+                set.add_sprite(black_turn_sprite, {(initial_window_dimensions()
+                                                            .width / 2 - 50), 0}, 4);
+            }
+            else {
+                set.add_sprite(white_turn_sprite, {(initial_window_dimensions()
+                                                            .width / 2 - 50), 0}, 4);
+            }
 
             Player player = model_.operator[](on_board);
             if(player == Player::dark) {
@@ -53,47 +125,6 @@ void View::draw(Sprite_set& set)
 
             if(move != nullptr && player == Player::neither) {
                 set.add_sprite(position_sprite_, screen_pos, 2);
-            }
-
-            if(model_.is_game_over()) {
-                ge211::Rectangle board = model_.board();
-                set.add_sprite(background_grey_sprite, {0,0}, 0);
-                if(model_.winner() == Player::light) {
-                    for (Position each_pos: board) {
-                        ge211::Position final_screen_pos =
-                                board_to_screen_(each_pos);
-                        if(model_.operator[](each_pos) == Player::dark){
-                            set.add_sprite(player_grey_token_,
-                                    final_screen_pos, 3);
-
-                        }
-                    }
-                }
-                else if(model_.winner() == Player::dark){
-                    for (Position each_pos: board) {
-                        ge211::Position final_screen_pos =
-                                                board_to_screen_(each_pos);
-                        if(model_.operator[](each_pos) == Player::light){
-                            set.add_sprite(player_grey_token_,
-                                           final_screen_pos, 3);
-
-                        }
-                    }
-                } else if (model_.winner() == Player::neither){
-                    for (Position each_pos: board) {
-                        ge211::Position final_screen_pos =
-                                                board_to_screen_(each_pos);
-                            set.add_sprite(player_grey_token_,
-                                           final_screen_pos, 3);
-
-                    }
-                }
-            }
-            else if(model_.turn() == Player::dark) {
-                set.add_sprite(background_black_sprite, {0,0}, 0);
-            }
-            else if(model_.turn() == Player:: light) {
-                set.add_sprite(background_white_sprite, {0,0}, 0);
             }
         }
     }
