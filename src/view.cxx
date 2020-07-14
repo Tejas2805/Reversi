@@ -25,6 +25,11 @@ View::View(Model const& model)
         , background_black_sprite(this->initial_window_dimensions(), black_color)
         , background_grey_sprite(this->initial_window_dimensions(),
                 light_grey_color)
+        , black_turn_sprite(text_generate("BLACK TURN"))
+        , white_turn_sprite(text_generate("WHITE TURN"))
+        , black_wins_sprite(text_generate("BLACK WINS"))
+        , white_wins_sprite(text_generate("WHITE WINS"))
+        , neither_wins_sprite(text_generate("DRAW"))
         // You may want to add sprite initialization here
 { }
 
@@ -33,26 +38,6 @@ const int grid_size_ = 23;
 void View::draw(Sprite_set& set)
 {
     Position centre = model_.board().center();
-
-    ge211::Text_sprite::Builder black_turn_builder(sans30);
-    black_turn_builder.color(white_color) << "BLACK TURN";
-    black_turn_sprite.reconfigure(black_turn_builder);
-
-    ge211::Text_sprite::Builder white_turn_builder(sans30);
-    white_turn_builder.color(white_color) << "WHITE TURN";
-    white_turn_sprite.reconfigure(white_turn_builder);
-
-    ge211::Text_sprite::Builder black_winner_builder(sans30);
-    black_winner_builder.color(white_color) << "BLACK WINS";
-    black_wins_sprite.reconfigure(black_winner_builder);
-
-    ge211::Text_sprite::Builder white_winner_builder(sans30);
-    white_winner_builder.color(white_color) << "WHITE WINS";
-    white_wins_sprite.reconfigure(white_winner_builder);
-
-    ge211::Text_sprite::Builder neither_winner_builder(sans30);
-    neither_winner_builder.color(white_color) << "DRAW";
-    neither_wins_sprite.reconfigure(neither_winner_builder);
 
     for(int i = 0; i < model_.board().dimensions().width; i++) {
         for (int j = 0; j < model_.board().dimensions().height; j++) {
@@ -75,7 +60,7 @@ void View::draw(Sprite_set& set)
                                                 board_to_screen_(each_pos);
                         if(model_.operator[](each_pos) == Player::dark){
                             set.add_sprite(player_grey_token_,
-                                           final_screen_pos, 3);
+                                           final_screen_pos, 4);
 
                         }
                     }
@@ -89,11 +74,12 @@ void View::draw(Sprite_set& set)
                                                 board_to_screen_(each_pos);
                         if(model_.operator[](each_pos) == Player::light){
                             set.add_sprite(player_grey_token_,
-                                           final_screen_pos, 3);
+                                           final_screen_pos, 4);
 
                         }
                     }
-                } else if (model_.winner() == Player::neither){
+                }
+                else if (model_.winner() == Player::neither){
                     set.add_sprite(neither_wins_sprite, {
                             (initial_window_dimensions()
                                      .width / 2 - 50), 0}, 4);
@@ -101,18 +87,17 @@ void View::draw(Sprite_set& set)
                         ge211::Position final_screen_pos =
                                                 board_to_screen_(each_pos);
                         set.add_sprite(player_grey_token_,
-                                       final_screen_pos, 3);
-
+                                       final_screen_pos, 4);
                     }
                 }
             }
             else if(model_.turn() == Player::dark) {
                 set.add_sprite(black_turn_sprite, {(initial_window_dimensions()
-                                                            .width / 2 - 50), 0}, 4);
+                .width / 2 - 50), 0}, 4);
             }
             else {
                 set.add_sprite(white_turn_sprite, {(initial_window_dimensions()
-                                                            .width / 2 - 50), 0}, 4);
+                .width / 2 - 50), 0}, 4);
             }
 
             Player player = model_.operator[](on_board);
@@ -163,4 +148,13 @@ ge211::Dimensions View::compute_grid_offset(Model const& model)
     ge211::Dimensions model_dims{model_.board().dimensions().width, model_
             .board().dimensions().height};
     return ( 50 * model_.board().dimensions() - grid_size_ * model_dims) / 2;
+}
+
+ge211::Text_sprite View::text_generate(std::string s)
+{
+    ge211::Text_sprite          sprite;
+    ge211::Text_sprite::Builder string_build(sans30);
+    string_build.color(white_color) << s;
+    sprite.reconfigure(string_build);
+    return sprite;
 }
